@@ -5,9 +5,9 @@ export const MyOrders = () => {
     return (
         <div>
             <h1>Мои Заказы</h1>
-            {orders?.map((i,order) => (
+            {orders?.map((order) => (
                 <div key={order.id}>
-                    <p>Номер Заказа: {i}</p>
+                    <p>Номер Заказа: {order.id}</p>
                     <p>Сумма: {order.totalPrice}</p>
                 </div>
             ))}

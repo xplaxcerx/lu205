@@ -29,7 +29,6 @@ export const Cart = () => {
     const [updateCountProduct] = useUpdateCountProductMutation();
     const [createOrder, { isLoading: isLoadingCreateOrder }] = useCreateOrderMutation();
     const [cartQuantity, setCartQuantity] = React.useState<CartQuantityState[]>([]);
-    const { refetch: refetchCart } = useGetCartQuery();
     const { data: user } = useGetCurrentUserQuery();
     const [isDelivery, setIsDelivery] = React.useState(false);
     const [isRoomApprove, setIsRoomAprove] = React.useState(true);

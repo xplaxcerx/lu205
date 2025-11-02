@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const { sequelize } = require('./models');
@@ -26,6 +27,15 @@ app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/orders', ordersRouter);
 
+// Раздача статических файлов фронтенда (только для продакшена)
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../dist')));
+    
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../dist/index.html'));
+    });
+}
+
 // Sync database
 sequelize.sync({ force: false }).then(() => {
     console.log('Database synced');
@@ -34,6 +44,7 @@ sequelize.sync({ force: false }).then(() => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+    console.log(`Server is running on ${HOST}:${PORT}`);
 });
