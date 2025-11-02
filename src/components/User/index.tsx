@@ -1,8 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router";
-import { useEditUserRoomMutation, useGetCurrentUserQuery, useSignOutMutation } from "../../redux/userApiSlice";
+import { useEditUserRoomMutation, useEditUserTelegramMutation, useGetCurrentUserQuery, useSignOutMutation } from "../../redux/userApiSlice";
 import { useGetAllOrderQuery } from "../../redux/orderApiSlice";
-import { Link } from "react-router";
 import styles from './styles.module.scss';
 import { useGetCartQuery } from "../../redux/apiSlice";
 import { LoadingOutlined } from '@ant-design/icons';
@@ -10,24 +9,58 @@ import { Flex, Spin } from 'antd';
 export const User = () => {
     const { data: user, isLoading } = useGetCurrentUserQuery(undefined, {skip: !localStorage.getItem("token")});
     const [editRoom] = useEditUserRoomMutation();
+    const [editTelegram] = useEditUserTelegramMutation();
     const { refetch: refetchCart } = useGetCartQuery();
     const { data: orders } = useGetAllOrderQuery();
-    const [clickEdit, setClickEdit] = React.useState(false);
+    const [clickEditRoom, setClickEditRoom] = React.useState(false);
+    const [clickEditTelegram, setClickEditTelegram] = React.useState(false);
     const [inputRoom, setInputRoom] = React.useState('');
+    const [inputTelegram, setInputTelegram] = React.useState('');
     const navigate = useNavigate();
+    
+    React.useEffect(() => {
+        if (user?.telegram) {
+            const telegramValue = user.telegram.replace(/^@/, '');
+            setInputTelegram(telegramValue);
+        } else {
+            setInputTelegram('');
+        }
+    }, [user?.telegram]);
+
+    React.useEffect(() => {
+        if (user?.room) {
+            setInputRoom(user.room);
+        } else {
+            setInputRoom('');
+        }
+    }, [user?.room]);
+
     const onChangeRoom = async (e: React.ChangeEvent<HTMLInputElement>) => {
         setInputRoom(e.target.value);
-    } 
-    const [signOut] = useSignOutMutation();
-    const onClickSaveRoom = async () => {
+    }
 
-        if(clickEdit) {
+    const onChangeTelegram = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputTelegram(e.target.value);
+    }
+    
+    const [signOut] = useSignOutMutation();
+    
+    const onClickSaveRoom = async () => {
+        if(clickEditRoom) {
             await editRoom({
                 room: inputRoom
-    
             });
         }
-        setClickEdit(false);
+        setClickEditRoom(false);
+    }
+
+    const onClickSaveTelegram = async () => {
+        if(clickEditTelegram) {
+            await editTelegram({
+                telegram: inputTelegram
+            });
+        }
+        setClickEditTelegram(false);
     }
     console.log(orders);
     console.log()
@@ -51,23 +84,35 @@ export const User = () => {
             <div className={styles.dataBlock}>
                 <p>{user?.login}</p>
                 <div className={styles.roomSetting}>
-                    {clickEdit ?
+                    {clickEditRoom ?
                     <> 
                         <input type='text' placeholder="Ваша Комната..." value={inputRoom} onChange={(e) => onChangeRoom(e)}></input>
                         <img className={styles.checkMark} src="/img/check-mark.svg" alt="check-mark" width={17} height={17} onClick={onClickSaveRoom}/>
                     </>
                     : 
                     <>
-                        <p> Ваша Комната: {user?.room}</p>
-                        <img className={styles.settingButton}src="/img/edit-button.svg" alt="edit" width={17} height={17} onClick={() => setClickEdit(true)}/>
+                        <p> Ваша Комната: {user?.room || 'Не указана'}</p>
+                        <img className={styles.settingButton}src="/img/edit-button.svg" alt="edit" width={17} height={17} onClick={() => setClickEditRoom(true)}/>
                     </>
                     }
                 </div>
-                <div>
-                    <Link to='/my-orders'>
-                    Мои Заказы
-                    </Link>
+                <div className={styles.roomSetting}>
+                    {clickEditTelegram ?
+                    <> 
+                        <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                            <span>@</span>
+                            <input type='text' placeholder="username" value={inputTelegram} onChange={(e) => onChangeTelegram(e)} style={{flex: 1}}></input>
+                        </div>
+                        <img className={styles.checkMark} src="/img/check-mark.svg" alt="check-mark" width={17} height={17} onClick={onClickSaveTelegram}/>
+                    </>
+                    : 
+                    <>
+                        <p>Ваш Телеграмм: {user?.telegram ? user.telegram : 'Не указан'}</p>
+                        <img className={styles.settingButton}src="/img/edit-button.svg" alt="edit" width={17} height={17} onClick={() => setClickEditTelegram(true)}/>
+                    </>
+                    }
                 </div>
+                
                 <button className={styles.exitBtn} onClick={onClickExit} >Выйти</button>
                 
             </div>

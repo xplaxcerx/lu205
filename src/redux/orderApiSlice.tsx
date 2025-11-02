@@ -49,10 +49,11 @@ export const orderApiSlice = createApi({
     }),
     tagTypes: ['Order', 'Cart'],
     endpoints: (builder) => ({
-        createOrder: builder.mutation<OrderResponse, void>({
-            query: () => ({
+        createOrder: builder.mutation<OrderResponse, { deliveryRoom?: string | null } | void>({
+            query: (params) => ({
                 url: '/orders',
-                method: 'POST'
+                method: 'POST',
+                body: params || {}
             }),
             invalidatesTags: ['Order', 'Cart']
         }),

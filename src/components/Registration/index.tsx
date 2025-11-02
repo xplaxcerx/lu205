@@ -9,13 +9,15 @@ import { Flex, Spin } from 'antd';
 type FormInput = {
     login: string,
     password: string,
-    room: string
+    room: string,
+    telegram: string
 };
 export const Registration = () => {
     const [registrData, setRegistrData] = React.useState({
         login: '',
         password: '',
-        room: ''
+        room: '',
+        telegram: ''
     });
     const [errorMessage, setErrorMessage] = React.useState('');
     const navigate = useNavigate();
@@ -91,6 +93,21 @@ export const Registration = () => {
                         value={registrData.room} onChange={onInputData}
                         onFocus={() => setErrorMessage('')}
                         />
+
+                        <div style={{display: 'flex', alignItems: 'center', gap: '5px', width: '100%'}}>
+                            <span>@</span>
+                            <input 
+                            {...register('telegram')}  
+                            className={styles.inputRoom} 
+                            type="text" 
+                            placeholder='username' 
+                            name="telegram"
+                            value={registrData.telegram} 
+                            onChange={onInputData}
+                            onFocus={() => setErrorMessage('')}
+                            style={{flex: 1}}
+                            />
+                        </div>
 
                     </div>
                     <div className={styles.registration}>

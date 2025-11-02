@@ -33,6 +33,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
         // Получаем пользователя для комнаты доставки (если есть)
         const user = await User.findByPk(userId);
+        const { deliveryRoom } = req.body;
 
         // Вычисляем общую стоимость
         const totalPrice = cart.Products.reduce((sum, item) => {
@@ -45,7 +46,7 @@ router.post('/', authMiddleware, async (req, res) => {
             const order = await Order.create({
                 userId,
                 totalPrice,
-                deliveryRoom: user.room || null
+                deliveryRoom: deliveryRoom || user?.room || null
             }, { transaction: t });
 
             // Создаем позиции заказа

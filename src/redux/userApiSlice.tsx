@@ -4,6 +4,7 @@ interface UserData {
     id: number,
     login: string,
     room: string,
+    telegram: string | null,
     role: string
 }
 interface AuthorazeResponse {
@@ -19,6 +20,7 @@ interface RegistInputData {
     login: string,
     password: string,
     room: string,
+    telegram?: string,
 }
 
 export interface SignInInputData {
@@ -51,13 +53,14 @@ export const userApiSlice = createApi({
             invalidatesTags: ['Auth']
         }),
         registr: builder.mutation<AuthorazeResponse, RegistInputData> ({
-            query: ({ login, password, room }) => ({
+            query: ({ login, password, room, telegram }) => ({
                 url: '/register',
                 method: 'POST',
                 body: {
                     login: login,
                     password: password,
-                    room: room
+                    room: room,
+                    telegram: telegram
                 }
             }), 
             onQueryStarted: () => {
@@ -93,6 +96,16 @@ export const userApiSlice = createApi({
             }),
             invalidatesTags: ['User']
         }),
+        editUserTelegram: builder.mutation<UserData, {telegram: string}> ({
+            query: ({ telegram }) => ({
+                url: '/telegram',
+                method: 'PUT',
+                body: {
+                    telegram
+                }
+            }),
+            invalidatesTags: ['User']
+        }),
         signOut: builder.mutation<void, void>({
             queryFn: () => {
                 localStorage.removeItem('token');
@@ -110,5 +123,6 @@ export const {
     useAutorizeMutation,
     useGetCurrentUserQuery,
     useEditUserRoomMutation,
+    useEditUserTelegramMutation,
     useSignOutMutation,
 } = userApiSlice;

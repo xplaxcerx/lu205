@@ -10,10 +10,16 @@ import { Link } from 'react-router';
 import { debounce } from 'lodash';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Flex, Spin } from 'antd';
+import { useGetCurrentUserQuery } from '../../redux/userApiSlice';
+import { useForm } from 'react-hook-form';
 interface CartQuantityState {
     productId: number;
     quantity: number;
 }
+type DeliveryFormInput = {
+    room: string
+}
+
 export const Cart = () => {
     const [isOrderModalOpened, setIsOrderModalOpened] = React.useState(false);
     const [orderResponse, setOrderResponse] = React.useState<OrderResponse | null>(null);
@@ -24,6 +30,19 @@ export const Cart = () => {
     const [createOrder, { isLoading: isLoadingCreateOrder }] = useCreateOrderMutation();
     const [cartQuantity, setCartQuantity] = React.useState<CartQuantityState[]>([]);
     const { refetch: refetchCart } = useGetCartQuery();
+    const { data: user } = useGetCurrentUserQuery();
+    const [isDelivery, setIsDelivery] = React.useState(false);
+    const [isRoomApprove, setIsRoomAprove] = React.useState(true);
+    const { register: registerRoom, handleSubmit: handleSubmitRoom, setValue: setRoomValue } = useForm<DeliveryFormInput>();
+    
+    React.useEffect(() => {
+        if (user?.room) {
+            setRoomValue('room', user.room);
+            setIsRoomAprove(true);
+        } else {
+            setIsRoomAprove(false);
+        }
+    }, [user?.room, setRoomValue]);
     const onClickDelelte = (productId: number) => (
         removeFromCart(productId)
     );
@@ -62,11 +81,11 @@ export const Cart = () => {
         debouncedUpdate();
         return () => debouncedUpdate.cancel();
     }, [cartQuantity, updateCountProduct]);
-    const onClickOrder = async () => {
-        const response = await createOrder().unwrap();
+    const onClickOrder = async (data?: DeliveryFormInput) => {
+        const room = isDelivery ? (data?.room || user?.room || null) : null;
+        const response = await createOrder({ deliveryRoom: room }).unwrap();
         setOrderResponse(response);
         setIsOrderModalOpened(true);
-
     }
     if (!localStorage.getItem('token')) {
         return <div className={styles.unAuth}>
@@ -139,10 +158,59 @@ export const Cart = () => {
                                 </div>
                             ))}
                         </div>
+                        <div className={styles.deliverySection}>
+                            <div className={styles.deliveryQuestion}>
+                                <h3>🚚 Нужна доставка?</h3>
+                                <p className={isDelivery ? styles.activeDelivery : ''} onClick={() => setIsDelivery(true)}>Да</p>
+                                <p className={!isDelivery ? styles.activeDelivery : ''} onClick={() => setIsDelivery(false)}>Нет</p>
+                            </div>
+                            {isDelivery && (
+                                <form onSubmit={handleSubmitRoom(onClickOrder)} className={styles.deliveryRoomForm}>
+                                    <div className={styles.deliveryRoomSection}>
+                                        <h3>📍 Укажите номер комнаты</h3>
+                                        {isRoomApprove ? (
+                                            <div className={styles.roomApprove}>
+                                                <p className={styles.roomValue}>Комната: {user?.room || 'Не указана'}?</p>
+                                                <p className={isRoomApprove ? styles.activeDelivery : ''} onClick={() => setIsRoomAprove(true)}>Верно</p>
+                                                <p className={!isRoomApprove ? styles.activeDelivery : ''} onClick={() => setIsRoomAprove(false)}>Изменить</p>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.changeRoom}>
+                                                <input 
+                                                    {...registerRoom('room', {
+                                                        required: isDelivery ? 'Это обязательное поле' : false
+                                                    })}
+                                                    defaultValue={user?.room || ''}
+                                                    placeholder="Введите номер комнаты"
+                                                />
+                                                <button type="submit" className={styles.saveRoomButton}>
+                                                    <img src="/img/check-mark.svg" width={15} height={15} alt="" />
+                                                </button>
+                                                {user?.room && (
+                                                    <img src="/img/cross.svg" width={11} height={11} alt="" onClick={() => setIsRoomAprove(true)} />
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                         <div className={styles.priceAndOrder}>
                             <p className={styles.totalPrice}>Общая сумма: {Math.round(cartItem?.totalPrice ?? 0)}</p>
-                            <button className={styles.buttonOrder} onClick={onClickOrder}>Оформить заказ</button>
-                            {/* {isOrderModalOpened &&  */}
+                            <button 
+                                className={styles.buttonOrder} 
+                                onClick={() => {
+                                    if (isDelivery && !isRoomApprove) {
+                                        handleSubmitRoom(onClickOrder)();
+                                    } else {
+                                        onClickOrder();
+                                    }
+                                }}
+                                disabled={isDelivery && !isRoomApprove && !user?.room}
+                            >
+                                Оформить заказ
+                            </button>
+                            {isOrderModalOpened && 
                             <Modal
                                 onClose={() => onClickClose()}
                                 stylesModal={'order'}>
@@ -150,7 +218,7 @@ export const Cart = () => {
                                     orderResponse={orderResponse}
                                 />
                             </Modal>
-                            {/* } */}
+                            }
                         </div>
                     </div>)
 
