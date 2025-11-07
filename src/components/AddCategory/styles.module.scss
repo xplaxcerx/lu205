@@ -1,0 +1,85 @@
+.addCategoryForm {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    
+    h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .categoryInput {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        
+        &:focus {
+            outline: none;
+            border-color: rgb(98, 189, 98);
+            box-shadow: 0 0 0 3px rgba(98, 189, 98, 0.1);
+        }
+        
+        &::placeholder {
+            color: #999;
+        }
+    }
+    
+    .error {
+        margin: 0;
+        color: #f44336;
+        font-size: 14px;
+    }
+    
+    .buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 10px;
+    }
+    
+    .cancelButton {
+        padding: 10px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: white;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            background-color: #f5f5f5;
+            border-color: #ccc;
+        }
+    }
+    
+    .submitButton {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgb(98, 189, 98) 0%, #6ab86a 100%);
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        
+        &:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(98, 189, 98, 0.3);
+        }
+        
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    }
+}
+

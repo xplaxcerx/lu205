@@ -27,9 +27,21 @@
 .dataBlock {
     display: flex;
     flex-direction: column;
-    margin: 25px 15px 5px 11px;
+    margin: 5px 15px 5px 11px;
 }
-
+.telegramBlock{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    margin-top: 15px;
+}
+.inputTelegram {
+    flex: 1;
+    border-radius: 15px;
+    padding: 5px;
+    border: 1px solid;
+}
 .inputLogin {
     margin-bottom: 15px;
     border-radius: 15px;

@@ -1,5 +1,7 @@
 .container {
     margin: 15px;
+    margin-top: 105px;
+
     @media(max-width: 555px) {
         height: 619px;
     }

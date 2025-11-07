@@ -31,17 +31,27 @@ export const Cart = () => {
     const [cartQuantity, setCartQuantity] = React.useState<CartQuantityState[]>([]);
     const { data: user } = useGetCurrentUserQuery();
     const [isDelivery, setIsDelivery] = React.useState(false);
-    const [isRoomApprove, setIsRoomAprove] = React.useState(true);
+    const [isRoomApprove, setIsRoomAprove] = React.useState(false);
+    const [showRoomForm, setShowRoomForm] = React.useState(false);
+    const [savedRoom, setSavedRoom] = React.useState<string | null>(null);
     const { register: registerRoom, handleSubmit: handleSubmitRoom, setValue: setRoomValue } = useForm<DeliveryFormInput>();
     
     React.useEffect(() => {
-        if (user?.room) {
-            setRoomValue('room', user.room);
-            setIsRoomAprove(true);
+        if (isDelivery) {
+            if (user?.room) {
+                setRoomValue('room', user.room);
+                setSavedRoom(user.room);
+                setIsRoomAprove(true);
+                setShowRoomForm(true);
+            } else {
+                setIsRoomAprove(false);
+                setSavedRoom(null);
+                setShowRoomForm(true);
+            }
         } else {
-            setIsRoomAprove(false);
+            setShowRoomForm(false);
         }
-    }, [user?.room, setRoomValue]);
+    }, [isDelivery, user?.room, setRoomValue]);
     const onClickDelelte = (productId: number) => (
         removeFromCart(productId)
     );
@@ -80,8 +90,19 @@ export const Cart = () => {
         debouncedUpdate();
         return () => debouncedUpdate.cancel();
     }, [cartQuantity, updateCountProduct]);
-    const onClickOrder = async (data?: DeliveryFormInput) => {
-        const room = isDelivery ? (data?.room || user?.room || null) : null;
+    const onSaveRoom = (data: DeliveryFormInput) => {
+        setSavedRoom(data.room);
+        setIsRoomAprove(true);
+        setShowRoomForm(false);
+    }
+
+    const onConfirmRoom = () => {
+        setIsRoomAprove(true);
+        setShowRoomForm(false);
+    }
+
+    const onClickOrder = async () => {
+        const room = isDelivery ? (savedRoom || user?.room || null) : null;
         const response = await createOrder({ deliveryRoom: room }).unwrap();
         setOrderResponse(response);
         setIsOrderModalOpened(true);
@@ -95,8 +116,8 @@ export const Cart = () => {
         </div>
     }
     const onClickClose = () => {
-        // setIsOrderModalOpened(false);
-        // refetchCart();
+        setIsOrderModalOpened(false);
+        removeAllCart();
     }
     return (
         isLoadingCart ?
@@ -159,22 +180,47 @@ export const Cart = () => {
                         </div>
                         <div className={styles.deliverySection}>
                             <div className={styles.deliveryQuestion}>
-                                <h3>🚚 Нужна доставка?</h3>
-                                <p className={isDelivery ? styles.activeDelivery : ''} onClick={() => setIsDelivery(true)}>Да</p>
-                                <p className={!isDelivery ? styles.activeDelivery : ''} onClick={() => setIsDelivery(false)}>Нет</p>
+                                <input 
+                                    type="checkbox" 
+                                    id="deliveryCheckbox"
+                                    checked={isDelivery}
+                                    onChange={(e) => {
+                                        setIsDelivery(e.target.checked);
+                                    }}
+                                    className={styles.deliveryCheckbox}
+                                />
+                                <label htmlFor="deliveryCheckbox" className={styles.deliveryLabel}>
+                                    Доставка
+                                </label>
+                                {isDelivery && showRoomForm && (
+                                    <img 
+                                        src="/img/cross.svg" 
+                                        alt="Отменить доставку"
+                                        className={styles.clearDelivery}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsDelivery(false);
+                                            setShowRoomForm(false);
+                                        }}
+                                        title="Отменить доставку"
+                                    />
+                                )}
                             </div>
-                            {isDelivery && (
-                                <form onSubmit={handleSubmitRoom(onClickOrder)} className={styles.deliveryRoomForm}>
+                            {isDelivery && showRoomForm && (
+                                <div className={styles.deliveryRoomForm}>
                                     <div className={styles.deliveryRoomSection}>
                                         <h3>📍 Укажите номер комнаты</h3>
                                         {isRoomApprove ? (
                                             <div className={styles.roomApprove}>
-                                                <p className={styles.roomValue}>Комната: {user?.room || 'Не указана'}?</p>
-                                                <p className={isRoomApprove ? styles.activeDelivery : ''} onClick={() => setIsRoomAprove(true)}>Верно</p>
-                                                <p className={!isRoomApprove ? styles.activeDelivery : ''} onClick={() => setIsRoomAprove(false)}>Изменить</p>
+                                                <p className={styles.roomValue}>Комната: {savedRoom || user?.room || 'Не указана'}</p>
+                                                <p className={styles.activeDelivery} onClick={onConfirmRoom}>Верно</p>
+                                                <p onClick={() => {
+                                                    setIsRoomAprove(false);
+                                                    setShowRoomForm(true);
+                                                }}>Изменить</p>
                                             </div>
                                         ) : (
-                                            <div className={styles.changeRoom}>
+                                            <form onSubmit={handleSubmitRoom(onSaveRoom)} className={styles.changeRoom}>
                                                 <input 
                                                     {...registerRoom('room', {
                                                         required: isDelivery ? 'Это обязательное поле' : false
@@ -188,24 +234,18 @@ export const Cart = () => {
                                                 {user?.room && (
                                                     <img src="/img/cross.svg" width={11} height={11} alt="" onClick={() => setIsRoomAprove(true)} />
                                                 )}
-                                            </div>
+                                            </form>
                                         )}
                                     </div>
-                                </form>
+                                </div>
                             )}
                         </div>
                         <div className={styles.priceAndOrder}>
                             <p className={styles.totalPrice}>Общая сумма: {Math.round(cartItem?.totalPrice ?? 0)}</p>
                             <button 
                                 className={styles.buttonOrder} 
-                                onClick={() => {
-                                    if (isDelivery && !isRoomApprove) {
-                                        handleSubmitRoom(onClickOrder)();
-                                    } else {
-                                        onClickOrder();
-                                    }
-                                }}
-                                disabled={isDelivery && !isRoomApprove && !user?.room}
+                                onClick={onClickOrder}
+                                disabled={isDelivery && !isRoomApprove && !savedRoom && !user?.room}
                             >
                                 Оформить заказ
                             </button>

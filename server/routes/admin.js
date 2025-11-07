@@ -141,16 +141,18 @@ router.delete('/products/:id', adminMiddleware, async (req, res) => {
 // Получение списка всех товаров для админ-панели
 router.get('/products', adminMiddleware, async (req, res) => {
     try {
-        const { categoryId = '0', search = '' } = req.query;
+        const { category, search = '' } = req.query;
 
         // Формируем условия поиска
         const whereConditions = {
             [Op.and]: []
         };
 
-        // Добавляем условие категории, если не 0
-        if (categoryId !== '0') {
-            whereConditions.category = categoryId.toString();
+        // Добавляем условие категории, если указана
+        if (category && category !== '0' && category !== 'Все') {
+            whereConditions.category = {
+                [Op.iLike]: category
+            };
         }
 
         // Добавляем условие поиска, если не пустое

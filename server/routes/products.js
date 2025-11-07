@@ -2,16 +2,16 @@ const router = require('express').Router();
 const { Product } = require('../models');
 const { Op } = require('sequelize');
 
-const categories = ['Все', 'Сладкое', 'Быстрое приготовление', 'Вода', 'Энергетики', 'Чипсы'];
-
 // Получить все товары
 router.get('/', async (req, res) => {
     try {
         const { category, search } = req.query;
         let whereClause = {};
 
-        if (category && category !== '0') {
-            whereClause.category = categories[category];
+        if (category && category !== '0' && category !== 'Все') {
+            whereClause.category = {
+                [Op.iLike]: category
+            };
         }
 
         if (search) {
@@ -52,7 +52,7 @@ router.post('/', async (req, res) => {
             title,
             price,
             imageUrl,
-            category: categories[category],
+            category: category || '',
             size,
             unit,
             rating,
@@ -71,9 +71,6 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { title, price, imageUrl, category, size, unit, type, inStock } = req.body;
-        console.log('Received data:', req.body);
-        console.log('Category value:', category);
-        console.log('Mapped category:', categories[category]);
         
         const product = await Product.findByPk(req.params.id);
         
@@ -85,7 +82,7 @@ router.put('/:id', async (req, res) => {
             title,
             price,
             imageUrl,
-            category: categories[category],
+            category: category || product.category,
             size,
             unit,
             type,

@@ -11,6 +11,7 @@ export const Header = () => {
     
     return (
         <div className={styles.header}>
+            <div className={styles.headerContent}>
                 <Link to='/' className={styles.linkHome}>
                 <h1 className={styles.title}>Универсам 205</h1>
                 </Link>
@@ -35,7 +36,7 @@ export const Header = () => {
                         </div>
                         </Link>
                 </div>
-                
             </div>
+        </div>
     );
 };

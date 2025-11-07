@@ -27,7 +27,6 @@ app.use('/api/users', usersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/orders', ordersRouter);
 
-// Раздача статических файлов фронтенда (только для продакшена)
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, '../dist')));
     

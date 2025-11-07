@@ -8,11 +8,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    z-index: 2000;
 }
 
 
 .modal {
+    margin-top: -115px;
     background-color: white;
     width: 455px;
     height: 375px;

@@ -7,8 +7,12 @@ import { useGetProductsQuery } from "../../redux/apiSlice";
 import { Skeleton } from "../../components/Product/Skeleton";
 
 export const Home = () => {
-    const { categoryID, searchValue } = useAppSelector((state) => state.filter);
-    const { data: products, isLoading } = useGetProductsQuery({categoryId: categoryID, search: searchValue});
+    const { categoryID, selectedCategoryName, searchValue } = useAppSelector((state) => state.filter);
+    const { data: products, isLoading } = useGetProductsQuery({
+        categoryId: categoryID, 
+        categoryName: selectedCategoryName,
+        search: searchValue
+    });
     const skeleton = [...Array(15)].map((_, index) => <Skeleton key={index}/>)
     return (
         <div className={styles.containerHome}>

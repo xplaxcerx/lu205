@@ -8,10 +8,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
-    // @media(max-width: 555px) {
-    //     align-items: flex-start;
-    // }
+    z-index: 2000;
+    padding: 20px;
+    overflow-y: auto;
 }
 
 
@@ -22,10 +21,14 @@
     border-radius: 15px;
     padding: 11px;
     overflow: auto;
-    // margin-top: 95px;
+    margin: auto;
+    margin-top: 95px;
+
+    max-height: calc(100vh - 40px);
     @media(max-width: 555px) {
         width: 355px;
         height: 77%;
+        max-height: calc(100vh - 40px);
     }
 }
 

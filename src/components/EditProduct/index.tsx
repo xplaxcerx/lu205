@@ -30,8 +30,12 @@ export const EditProduct = () => {
     const onClickDelete = (id:number) => { 
         removeProduct({id});
     };
-    const { adminCategoryID, adminSearchValue } = useAppSelector(state => state.filter)
-    const { data: products, isLoading } = useGetProductsQuery({ categoryId: adminCategoryID, search: adminSearchValue });
+    const { adminCategoryID, adminSelectedCategoryName, adminSearchValue } = useAppSelector(state => state.filter)
+    const { data: products, isLoading } = useGetProductsQuery({ 
+        categoryId: adminCategoryID, 
+        categoryName: adminSelectedCategoryName,
+        search: adminSearchValue 
+    });
     const [updateCountProduct] = useUpdateInStockMutation();
     const onClickUpdate = async (data: FormInput) => {
         await updateCountProduct({

@@ -62,8 +62,6 @@ export const User = () => {
         }
         setClickEditTelegram(false);
     }
-    console.log(orders);
-    console.log()
     const onClickExit = async() => {
         await signOut();
         navigate('/authorization');

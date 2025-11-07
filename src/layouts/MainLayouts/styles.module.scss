@@ -1,14 +1,21 @@
 .wrapper {
     display: flex;
     flex-direction: column;
-    margin: 35px auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 17px;
+    margin-bottom: 25px;
+    // margin: 35px auto;
+    // margin-top: 17px;
     max-width: 1385px;
     background-color: #ffff;
     border-radius: 15px;
     justify-content: center;
     align-content: center;
+    position: relative;
     @media(max-width: 555px) {
       margin: 15px 7px 35px 7px;
     }
+    
   }
   

@@ -26,12 +26,16 @@ async function sendOrderNotification(order, user) {
         };
 
         const telegramInfo = user.telegram ? `\n📱 *Telegram:* ${escapeMarkdown(user.telegram)}` : '';
+        const isDelivery = order.deliveryRoom && order.deliveryRoom.trim() !== '';
+        const deliveryInfo = isDelivery 
+            ? `✅ *Доставка:* Да\n📍 *Комната доставки:* ${escapeMarkdown(order.deliveryRoom)}`
+            : `❌ *Доставка:* Нет`;
         
         const message = `
 🛒 *НОВЫЙ ЗАКАЗ №${order.id}*
 
 👤 *Клиент:* ${escapeMarkdown(user.login || 'Неизвестно')}${telegramInfo}
-📍 *Комната доставки:* ${escapeMarkdown(order.deliveryRoom || 'Не указана')}
+${deliveryInfo}
 
 📦 *Товары:*
 ${orderItems}

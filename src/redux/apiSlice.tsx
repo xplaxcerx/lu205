@@ -99,13 +99,13 @@ export const apiSlice = createApi({
             return headers;
         }
     }),
-    tagTypes: ['Products', 'Cart', 'Favorites', 'adminProduct'],
+    tagTypes: ['Products', 'Cart', 'Favorites', 'adminProduct', 'Categories'],
     endpoints: (builder) => ({
-        getProducts: builder.query<BaseItem[], { categoryId: number, search?: string}> ({
-            query: ({ categoryId, search }) => ({
+        getProducts: builder.query<BaseItem[], { categoryId: number, categoryName?: string | null, search?: string}> ({
+            query: ({ categoryId, categoryName, search }) => ({
                 url: '/products',
                 params: {
-                ...(categoryId > 0 ? {category: categoryId} : {}),
+                ...(categoryId > 0 && categoryName ? {category: categoryName} : {}),
                 ...(search ? { search } : {})
                 }
             }),
@@ -239,6 +239,28 @@ export const apiSlice = createApi({
                 }
             }),
             invalidatesTags: ['Products', 'adminProduct']
+        }),
+        getCategories: builder.query<string[], void>({
+            query: () => ({
+                url: '/categories',
+                method: 'GET'
+            }),
+            providesTags: ['Categories']
+        }),
+        addCategory: builder.mutation<{ message: string, category: string, tempProductId: number }, { category: string }>({
+            query: ({ category }) => ({
+                url: '/categories',
+                method: 'POST',
+                body: { category }
+            }),
+            invalidatesTags: ['Products', 'adminProduct', 'Categories']
+        }),
+        deleteCategory: builder.mutation<{ message: string, deletedCount: number }, { category: string }>({
+            query: ({ category }) => ({
+                url: `/categories/${encodeURIComponent(category)}`,
+                method: 'DELETE'
+            }),
+            invalidatesTags: ['Products', 'adminProduct', 'Categories']
         })
         
     })
@@ -259,4 +281,7 @@ export const {
     useEditProductMutation,
     useDeleteProductMutation,
     useUpdateInStockMutation,
+    useGetCategoriesQuery,
+    useAddCategoryMutation,
+    useDeleteCategoryMutation,
 } = apiSlice;

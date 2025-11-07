@@ -94,18 +94,17 @@ export const Registration = () => {
                         onFocus={() => setErrorMessage('')}
                         />
 
-                        <div style={{display: 'flex', alignItems: 'center', gap: '5px', width: '100%'}}>
+                        <div className={styles.telegramBlock}>
                             <span>@</span>
                             <input 
                             {...register('telegram')}  
-                            className={styles.inputRoom} 
+                            className={styles.inputTelegram} 
                             type="text" 
-                            placeholder='username' 
+                            placeholder='Ваш Телеграмм' 
                             name="telegram"
                             value={registrData.telegram} 
                             onChange={onInputData}
                             onFocus={() => setErrorMessage('')}
-                            style={{flex: 1}}
                             />
                         </div>
 

@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-
 import styles from './styles.module.scss';
 
 export const Admin = () => {
@@ -13,7 +12,6 @@ export const Admin = () => {
             </Link>
             <Link to='/adminEditProduct'>
                 <p>Изменение Продуктов</p>
-            
             </Link>
         </div>
         </div>
