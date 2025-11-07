@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router";
 import { useEditUserRoomMutation, useEditUserTelegramMutation, useGetCurrentUserQuery, useSignOutMutation } from "../../redux/userApiSlice";
-import { useGetAllOrderQuery } from "../../redux/orderApiSlice";
 import styles from './styles.module.scss';
 import { useGetCartQuery } from "../../redux/apiSlice";
 import { LoadingOutlined } from '@ant-design/icons';
@@ -11,7 +10,7 @@ export const User = () => {
     const [editRoom] = useEditUserRoomMutation();
     const [editTelegram] = useEditUserTelegramMutation();
     const { refetch: refetchCart } = useGetCartQuery();
-    const { data: orders } = useGetAllOrderQuery();
+    // const { data: orders } = useGetAllOrderQuery();
     const [clickEditRoom, setClickEditRoom] = React.useState(false);
     const [clickEditTelegram, setClickEditTelegram] = React.useState(false);
     const [inputRoom, setInputRoom] = React.useState('');

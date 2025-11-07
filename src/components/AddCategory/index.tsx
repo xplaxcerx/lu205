@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useAddCategoryMutation, useGetCategoriesQuery } from '../../redux/apiSlice';
-import { Modal } from '../Modal';
 import styles from './styles.module.scss';
 import { LoadingOutlined } from '@ant-design/icons';
 import { Flex, Spin } from 'antd';
