@@ -23,13 +23,14 @@ type DeliveryFormInput = {
 export const Cart = () => {
     const [isOrderModalOpened, setIsOrderModalOpened] = React.useState(false);
     const [orderResponse, setOrderResponse] = React.useState<OrderResponse | null>(null);
-    const { data: cartItem, isLoading: isLoadingCart } = useGetCartQuery();
+    const isAuthenticated = !!localStorage.getItem('token');
+    const { data: cartItem, isLoading: isLoadingCart } = useGetCartQuery(undefined, { skip: !isAuthenticated });
     const [removeFromCart, { isLoading: isLoadingRemoveItem }] = useRemoveFromCartMutation();
     const [removeAllCart, { isLoading: isLoadingRemove }] = useRemoveAllCartMutation();
     const [updateCountProduct] = useUpdateCountProductMutation();
     const [createOrder, { isLoading: isLoadingCreateOrder }] = useCreateOrderMutation();
     const [cartQuantity, setCartQuantity] = React.useState<CartQuantityState[]>([]);
-    const { data: user } = useGetCurrentUserQuery();
+    const { data: user } = useGetCurrentUserQuery(undefined, { skip: !isAuthenticated });
     const [isDelivery, setIsDelivery] = React.useState(false);
     const [isRoomApprove, setIsRoomAprove] = React.useState(false);
     const [showRoomForm, setShowRoomForm] = React.useState(false);
@@ -107,7 +108,12 @@ export const Cart = () => {
         setOrderResponse(response);
         setIsOrderModalOpened(true);
     }
-    if (!localStorage.getItem('token')) {
+    const onClickClose = () => {
+        setIsOrderModalOpened(false);
+        removeAllCart();
+    }
+    
+    if (!isAuthenticated) {
         return <div className={styles.unAuth}>
             <h3>Похоже, Вы ещё не авторизованы</h3>
             <Link to='/authorization'>
@@ -115,10 +121,7 @@ export const Cart = () => {
             </Link>
         </div>
     }
-    const onClickClose = () => {
-        setIsOrderModalOpened(false);
-        removeAllCart();
-    }
+    
     return (
         isLoadingCart ?
             <div className={styles.loadingWindow}>
@@ -133,7 +136,7 @@ export const Cart = () => {
                 </Flex>
             </div>
                 :
-                (cartItem?.totalCount === 0 || !localStorage.getItem('token')) ?
+                (cartItem?.totalCount === 0) ?
                     <CartEmpty />
                     :
                     (<div className={styles.cart}>

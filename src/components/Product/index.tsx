@@ -15,13 +15,14 @@ type CartItemProps = {
 
 
 export const Product: React.FC<CartItemProps> = ({ id, title, price, imageUrl, size, unit, inStock}) => {
+    const isAuthenticated = !!localStorage.getItem('token');
     const [addToCart, { isLoading: isLoadingAddCart }] = useAddToCartMutation();
     const [removeFromCart, { isLoading: isLoadingRemoveCart }] = useRemoveFromCartMutation();
     const [removeFromFavorite, { isLoading: isLoadingRemoveFavorite}] = useRemoveFromFavoriteMutation();
     const [addToFavorite, { isLoading: isLoadingAddFavorite}] = useAddOnFavoriteMutation();
     
-    const { data: favorites } = useGetFavoriteQuery();
-    const { data: cartItem } = useGetCartQuery();
+    const { data: favorites } = useGetFavoriteQuery(undefined, { skip: !isAuthenticated });
+    const { data: cartItem } = useGetCartQuery(undefined, { skip: !isAuthenticated });
     const addToCartBtn = (productId: number) => {
         if (!localStorage.getItem('token')) {
             alert('Сначала авторизируйтесь');

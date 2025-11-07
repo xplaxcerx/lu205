@@ -7,16 +7,14 @@ import { ClockCircleOutlined, CheckOutlined } from '@ant-design/icons'
 import styles from './styles.module.scss';
 
 export const Favorite = () => {
-    const { data: favoriteItem, isLoading } = useGetFavoriteQuery();
+    const isAuthenticated = !!localStorage.getItem('token');
+    const { data: favoriteItem, isLoading } = useGetFavoriteQuery(undefined, { skip: !isAuthenticated });
     const [removeFromFavorite, { isLoading: isLoadingRemoveItem }] = useRemoveFromFavoriteMutation();
     const [addToCart, { isLoading: isLoadingAddToCart }] = useAddToCartMutation();
     const [removeAllFavorite, { isLoading: isLoadingRemove}] = useRemoveAllFavoriteMutation();
     const [removeFromCart] = useRemoveFromCartMutation();
-    const { data: cartItem } = useGetCartQuery();
+    const { data: cartItem } = useGetCartQuery(undefined, { skip: !isAuthenticated });
     const { data: Product } = useGetProductsQuery({categoryId: 0, search: ''});
-    console.log(cartItem?.Products.map((obj) => (
-        obj.id
-    )));
     const onClickDelelte = (productId: number) => (
         removeFromFavorite(productId)
     );
@@ -29,7 +27,8 @@ export const Favorite = () => {
     const onClickDeleteFromCart = (productId:number) => (
         removeFromCart(productId)
     );
-    if (!localStorage.getItem('token')) {
+    
+    if (!isAuthenticated) {
         return <div className={styles.unAuth}>
             <h3>Похоже, Вы ещё не авторизованы</h3>
             <Link to='/authorization'>
