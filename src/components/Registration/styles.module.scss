@@ -13,7 +13,7 @@
     border: 1px solid;
     border-color: rgb(221, 218, 215);
     width: 495px;
-    height: 305px;
+    height: 395px;
     border-radius: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.191);
     border-radius: 19px;
@@ -27,14 +27,26 @@
 .dataBlock {
     display: flex;
     flex-direction: column;
-    margin: 5px 15px 5px 11px;
+    margin: 5px 15px 1px 11px;
+    min-height: 257px;  
+}
+.inputWrapper {
+    position: relative;
+    width: 100%;
+    min-height: 45px;
+    margin-bottom: 15px;
+}
+.telegramWrapper {
+    position: relative;
+    width: 100%;
+    min-height: 45px;
+    margin-bottom: 15px;
 }
 .telegramBlock{
     display: flex;
     align-items: center;
     gap: 5px;
     width: 100%;
-    margin-top: 15px;
 }
 .inputTelegram {
     flex: 1;
@@ -43,21 +55,21 @@
     border: 1px solid;
 }
 .inputLogin {
-    margin-bottom: 15px;
+    width: 100%;
     border-radius: 15px;
     padding: 5px;
     border: 1px solid;
 }
 
 .inputPassword {
-    margin-bottom: 15px;
+    width: 100%;
     border-radius: 15px;
     padding: 5px;
     border: 1px solid;
 }
 .signInBtn {
     display: flex;
-    margin-top: 17px;
+    margin-top: 5px;
     background-color:  rgb(98, 189, 98);
     color: rgb(48, 48, 48);
     border: 0;
@@ -86,7 +98,15 @@
     margin: 0;
 }
 .inputRoom {
+    width: 100%;
     border-radius: 15px;
     padding: 5px;
     border: 1px solid;
+}
+.error {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 0;
+    min-height: 18px;
 }

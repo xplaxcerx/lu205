@@ -27,6 +27,10 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Логин и пароль обязательны' });
         }
 
+        if (!telegram || telegram.trim() === '') {
+            return res.status(400).json({ message: 'Телеграмм обязателен для заполнения' });
+        }
+
         // Проверяем, существует ли пользователь
         const existingUser = await User.findOne({ where: { login } });
         if (existingUser) {
@@ -37,18 +41,21 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Обрабатываем telegram - сохраняем только @username
-        let telegramValue = telegram;
-        if (telegramValue) {
-            telegramValue = telegramValue.replace(/^https?:\/\/(www\.)?t\.me\//, '').replace(/^t\.me\//, '').replace(/^@/, '');
-            telegramValue = telegramValue ? `@${telegramValue}` : null;
+        let telegramValue = telegram.trim();
+        telegramValue = telegramValue.replace(/^https?:\/\/(www\.)?t\.me\//, '').replace(/^t\.me\//, '').replace(/^@/, '');
+        
+        if (!telegramValue || telegramValue.trim() === '') {
+            return res.status(400).json({ message: 'Телеграмм обязателен для заполнения' });
         }
+        
+        telegramValue = `@${telegramValue}`;
 
         // Создаем пользователя
         const user = await User.create({
             login,
             password: hashedPassword,
             room: room || null,
-            telegram: telegramValue || null,
+            telegram: telegramValue,
             role: 'user' // По умолчанию роль user
         });
 

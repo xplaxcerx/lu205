@@ -52,11 +52,11 @@ export const Registration = () => {
             if(error.data?.message === 'Пользователь с таким логином уже существует') {
                 setErrorMessage('Пожалуйста, придумайте другой логин');
             }
-            if(error.data?.message === "null value in column \"room\" violates not-null constraint") {
-                alert('Комната обязательна')
-            }
             if(error.data?.message === "Логин и пароль обязательны") {
                 alert('Логин и пароль обязательны');
+            }
+            if(error.data?.message === "Телеграмм обязателен для заполнения") {
+                setErrorMessage('Телеграмм обязателен для заполнения');
             }
         }
     };
@@ -69,43 +69,59 @@ export const Registration = () => {
                     {errorMessage !== '' ? errorMessage : null}
 
                     <div className={styles.dataBlock}>
-                        <input 
-                        {...register('login')}
-                        className={styles.inputLogin} 
-                        type="text" 
-                        placeholder='Логин' 
-                        onFocus={() => setErrorMessage('')}
-                        />
-                        {errors.login && <p>{errors.login.message}</p>}
-                        <input 
-                        {...register('password')} 
-                        className={styles.inputPassword} 
-                        type="text" 
-                        placeholder='Пароль' 
-                        onFocus={() => setErrorMessage('')}
-                        />
-
-                        <input 
-                        {...register('room')}  
-                        className={styles.inputRoom} 
-                        type="text" 
-                        placeholder='Комната' 
-                        value={registrData.room} onChange={onInputData}
-                        onFocus={() => setErrorMessage('')}
-                        />
-
-                        <div className={styles.telegramBlock}>
-                            <span>@</span>
+                        <div className={styles.inputWrapper}>
                             <input 
-                            {...register('telegram')}  
-                            className={styles.inputTelegram} 
+                            {...register('login', {
+                                required: 'Логин обязателен для заполнения'
+                            })}
+                            className={styles.inputLogin} 
                             type="text" 
-                            placeholder='Ваш Телеграмм' 
-                            name="telegram"
-                            value={registrData.telegram} 
-                            onChange={onInputData}
+                            placeholder='Логин' 
                             onFocus={() => setErrorMessage('')}
                             />
+                            {errors.login && <p className={styles.error}>{errors.login.message}</p>}
+                        </div>
+                        <div className={styles.inputWrapper}>
+                            <input 
+                            {...register('password', {
+                                required: 'Пароль обязателен для заполнения'
+                            })} 
+                            className={styles.inputPassword} 
+                            type="text" 
+                            placeholder='Пароль' 
+                            onFocus={() => setErrorMessage('')}
+                            />
+                            {errors.password && <p className={styles.error}>{errors.password.message}</p>}
+                        </div>
+
+                        <div className={styles.inputWrapper}>
+                            <input 
+                            {...register('room')}  
+                            className={styles.inputRoom} 
+                            type="text" 
+                            placeholder='Комната (необязательно)' 
+                            value={registrData.room} onChange={onInputData}
+                            onFocus={() => setErrorMessage('')}
+                            />
+                        </div>
+
+                        <div className={styles.telegramWrapper}>
+                            <div className={styles.telegramBlock}>
+                                <span>@</span>
+                                <input 
+                            {...register('telegram', {
+                                required: 'Телеграмм обязателен для заполнения'
+                            })}
+                                className={styles.inputTelegram} 
+                                type="text" 
+                                placeholder='Ваш Телеграмм' 
+                                name="telegram"
+                                value={registrData.telegram} 
+                                onChange={onInputData}
+                                onFocus={() => setErrorMessage('')}
+                                />
+                            </div>
+                            {errors.telegram && <p className={styles.error}>{errors.telegram.message}</p>}
                         </div>
 
                     </div>
