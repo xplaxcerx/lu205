@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "author": "Universam205",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-arduino-uno",
+      "id": "uno",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-max7219",
+      "id": "max1",
+      "top": -50,
+      "left": 200,
+      "attrs": {
+        "matrix": "8x8"
+      }
+    },
+    {
+      "type": "wokwi-max7219",
+      "id": "max2",
+      "top": -50,
+      "left": 300,
+      "attrs": {
+        "matrix": "8x8"
+      }
+    },
+    {
+      "type": "wokwi-max7219",
+      "id": "max3",
+      "top": -50,
+      "left": 400,
+      "attrs": {
+        "matrix": "8x8"
+      }
+    },
+    {
+      "type": "wokwi-max7219",
+      "id": "max4",
+      "top": -50,
+      "left": 500,
+      "attrs": {
+        "matrix": "8x8"
+      }
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": 150,
+      "left": 100,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "uno:11", "max1:DIN", "", [] ],
+    [ "uno:10", "max1:CS", "", [] ],
+    [ "uno:13", "max1:CLK", "", [] ],
+    [ "max1:DOUT", "max2:DIN", "", [] ],
+    [ "max2:DOUT", "max3:DIN", "", [] ],
+    [ "max3:DOUT", "max4:DIN", "", [] ],
+    [ "uno:10", "max2:CS", "", [] ],
+    [ "uno:10", "max3:CS", "", [] ],
+    [ "uno:10", "max4:CS", "", [] ],
+    [ "uno:13", "max2:CLK", "", [] ],
+    [ "uno:13", "max3:CLK", "", [] ],
+    [ "uno:13", "max4:CLK", "", [] ],
+    [ "uno:2", "dht1:OUT", "", [] ],
+    [ "uno:5V", "max1:VCC", "", [] ],
+    [ "uno:5V", "max2:VCC", "", [] ],
+    [ "uno:5V", "max3:VCC", "", [] ],
+    [ "uno:5V", "max4:VCC", "", [] ],
+    [ "uno:5V", "dht1:VCC", "", [] ],
+    [ "uno:GND", "max1:GND", "", [] ],
+    [ "uno:GND", "max2:GND", "", [] ],
+    [ "uno:GND", "max3:GND", "", [] ],
+    [ "uno:GND", "max4:GND", "", [] ],
+    [ "uno:GND", "dht1:GND", "", [] ]
+  ]
+}
+

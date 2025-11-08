@@ -1,0 +1,10 @@
+[wokwi]
+version = 1
+firmware = "arduino_project.ino"
+
+[wokwi.libraries]
+"MD_Parola" = "https://github.com/MajicDesigns/MD_Parola"
+"MD_MAX72XX" = "https://github.com/MajicDesigns/MD_MAX72XX"
+"DHT sensor library" = "https://github.com/adafruit/DHT-sensor-library"
+"Adafruit Unified Sensor" = "https://github.com/adafruit/Adafruit_Sensor"
+

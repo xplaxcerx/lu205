@@ -1,27 +1,27 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-const authMiddleware = async (req, res, next) => {
+const adminAuthMiddleware = async (req, res, next) => {
     try {
-        // Получаем токен из заголовка
         const token = req.headers.authorization?.split(' ')[1];
         
         if (!token) {
             return res.status(401).json({ message: 'Не авторизован' });
         }
 
-        // Проверяем наличие JWT_SECRET
         if (!process.env.JWT_SECRET) {
             return res.status(500).json({ message: 'Ошибка конфигурации сервера' });
         }
 
-        // Проверяем токен
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Получаем пользователя
         const user = await User.findByPk(decoded.id);
         if (!user) {
             return res.status(401).json({ message: 'Пользователь не найден' });
+        }
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ message: 'Нет прав администратора' });
         }
 
         req.user = {
@@ -41,4 +41,5 @@ const authMiddleware = async (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+module.exports = adminAuthMiddleware;
+

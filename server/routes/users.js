@@ -2,24 +2,17 @@ const router = require('express').Router();
 const { User, Cart, Favorite } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-
-const authMiddleware = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        req.user = decoded;
-        next();
-    } catch (error) {
-        return res.status(401).json({ message: 'Неверный токен' });
-    }
-};
+const authMiddleware = require('../middleware/auth');
+const { authLimiter } = require('../middleware/security');
+const {
+    validateRegister,
+    validateLogin,
+    validateRoomUpdate,
+    validateTelegramUpdate,
+} = require('../middleware/validation');
 
 // Регистрация
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, validateRegister, async (req, res) => {
     try {
         const { login, password, room, telegram } = req.body;
 
@@ -70,13 +63,16 @@ router.post('/register', async (req, res) => {
         });
 
         // Создаем JWT токен
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({ message: 'Ошибка конфигурации сервера' });
+        }
         const token = jwt.sign(
             { 
                 id: user.id.toString(), 
                 login: user.login,
                 role: user.role 
             },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
@@ -94,7 +90,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Авторизация
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, validateLogin, async (req, res) => {
     try {
         const { login, password } = req.body;
 
@@ -121,9 +117,12 @@ router.post('/login', async (req, res) => {
             role: user.role 
         };
         
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({ message: 'Ошибка конфигурации сервера' });
+        }
         const token = jwt.sign(
             tokenPayload,
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
@@ -139,8 +138,11 @@ router.post('/login', async (req, res) => {
             user: userData
         });
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка авторизации' 
+                : error.message 
+        });
     }
 });
 
@@ -160,7 +162,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // Изменить комнату
-router.put('/room', authMiddleware, async (req, res) => {
+router.put('/room', authMiddleware, validateRoomUpdate, async (req, res) => {
     try {
         const { room } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -182,7 +184,7 @@ router.put('/room', authMiddleware, async (req, res) => {
 });
 
 // Изменить Telegram
-router.put('/telegram', authMiddleware, async (req, res) => {
+router.put('/telegram', authMiddleware, validateTelegramUpdate, async (req, res) => {
     try {
         const { telegram } = req.body;
         const user = await User.findByPk(req.user.id);

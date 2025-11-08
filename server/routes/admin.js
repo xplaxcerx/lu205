@@ -2,49 +2,49 @@ const router = require('express').Router();
 const { Product, User, sequelize } = require('../models');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
-
-// Логируем все запросы
-router.use((req, res, next) => {
-    console.log('Admin route request:', {
-        method: req.method,
-        url: req.url,
-        body: req.body,
-        headers: req.headers
-    });
-    next();
-});
+const { adminLimiter } = require('../middleware/security');
+const {
+    validateProduct,
+    validateId,
+    validateStockUpdate,
+    validateSearch,
+} = require('../middleware/validation');
 
 // Middleware для проверки прав админа
 const adminMiddleware = async (req, res, next) => {
     try {
-        console.log('adminMiddleware: Checking authorization');
         const token = req.headers.authorization?.split(' ')[1];
         
         if (!token) {
-            console.log('adminMiddleware: No token found');
             return res.status(401).json({ message: 'Не авторизован' });
         }
 
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({ message: 'Ошибка конфигурации сервера' });
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('adminMiddleware: Token decoded:', decoded);
 
         const user = await User.findByPk(decoded.id);
         if (!user || user.role !== 'admin') {
-            console.log('adminMiddleware: User not found or not admin');
             return res.status(403).json({ message: 'Нет прав администратора' });
         }
 
         req.user = user;
-        console.log('adminMiddleware: Authorization successful');
         next();
     } catch (error) {
-        console.error('adminMiddleware error:', error);
-        res.status(401).json({ message: 'Неверный токен' });
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Токен истек' });
+        }
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ message: 'Неверный токен' });
+        }
+        return res.status(401).json({ message: 'Ошибка аутентификации' });
     }
 };
 
 // Добавление нового товара
-router.post('/products', adminMiddleware, async (req, res) => {
+router.post('/products', adminLimiter, adminMiddleware, validateProduct, async (req, res) => {
     try {
         const { title, price, imageUrl, category, size, unit, type, inStock } = req.body;
 
@@ -88,41 +88,29 @@ router.post('/products', adminMiddleware, async (req, res) => {
 });
 
 // Изменить количество товара
-router.patch('/products/:id/stock', adminMiddleware, async (req, res) => {
+router.patch('/products/:id/stock', adminLimiter, adminMiddleware, validateStockUpdate, async (req, res) => {
     try {
-        console.log('PATCH /products/:id/stock');
-        console.log('Request params:', req.params);
-        console.log('Request body:', req.body);
-        
         const { id } = req.params;
         const { amount } = req.body;
-
-        if (typeof amount !== 'number') {
-            return res.status(400).json({ message: 'amount должен быть числом' });
-        }
-
-        if (amount < 0) {
-            return res.status(400).json({ message: 'Количество товара не может быть отрицательным' });
-        }
 
         const product = await Product.findByPk(id);
         if (!product) {
             return res.status(404).json({ message: 'Товар не найден' });
         }
 
-        console.log('Current inStock:', product.inStock);
-        console.log('New amount:', amount);
-
         await product.update({ inStock: amount });
         res.json({ message: 'Количество товара обновлено', inStock: amount });
     } catch (error) {
-        console.error('Error updating stock:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка обновления товара' 
+                : error.message 
+        });
     }
 });
 
 // Удалить товар
-router.delete('/products/:id', adminMiddleware, async (req, res) => {
+router.delete('/products/:id', adminLimiter, adminMiddleware, validateId, async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
         
@@ -133,13 +121,16 @@ router.delete('/products/:id', adminMiddleware, async (req, res) => {
         await product.destroy();
         res.json({ message: 'Товар удален' });
     } catch (error) {
-        console.error('Error deleting product:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка удаления товара' 
+                : error.message 
+        });
     }
 });
 
 // Получение списка всех товаров для админ-панели
-router.get('/products', adminMiddleware, async (req, res) => {
+router.get('/products', adminLimiter, adminMiddleware, validateSearch, async (req, res) => {
     try {
         const { category, search = '' } = req.query;
 
@@ -177,14 +168,10 @@ router.get('/products', adminMiddleware, async (req, res) => {
 });
 
 // Полное редактирование товара
-router.put('/products/:id', adminMiddleware, async (req, res) => {
+router.put('/products/:id', adminLimiter, adminMiddleware, validateId, validateProduct, async (req, res) => {
     try {
         const { id } = req.params;
-        console.log('Request body:', req.body);
-        console.log('Request params:', req.params);
-        
         const { title, price, imageUrl, category, size, unit, type, inStock } = req.body;
-        console.log('Destructured data:', { title, price, imageUrl, category, size, unit, type, inStock });
 
         // Проверяем обязательные поля
         if (!title || !price || !imageUrl || !category || !size || !unit || !inStock) {
@@ -216,17 +203,6 @@ router.put('/products/:id', adminMiddleware, async (req, res) => {
             return res.status(400).json({ message: 'Товар с таким названием уже существует' });
         }
 
-        console.log('About to update product with data:', {
-            title: title.trim(),
-            price,
-            imageUrl,
-            category,
-            size,
-            unit,
-            type,
-            inStock: parseInt(inStock)
-        });
-
         // Обновляем все поля товара
         await product.update({
             title: title.trim(),
@@ -241,8 +217,11 @@ router.put('/products/:id', adminMiddleware, async (req, res) => {
 
         res.json(product);
     } catch (error) {
-        console.error('Error updating product:', error);
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка обновления товара' 
+                : error.message 
+        });
     }
 });
 

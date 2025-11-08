@@ -1,61 +1,41 @@
 const router = require('express').Router();
 const { Favorite, Product, FavoriteItem } = require('../models');
-const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/auth');
 
 // Получить избранные товары пользователя
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
-        console.log('Headers:', req.headers); // Логируем заголовки
+        const userId = req.user.id;
 
-        const token = req.headers.authorization?.split(' ')[1];
-        console.log('Token:', token); // Логируем токен
+        let favorite = await Favorite.findOne({
+            where: { userId },
+            include: [{
+                model: Product,
+                through: { attributes: [] }
+            }]
+        });
 
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
+        if (!favorite) {
+            favorite = await Favorite.create({ userId });
         }
 
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-            console.log('Decoded token:', decoded); // Логируем декодированный токен
-            const userId = decoded.id;
-
-            let favorite = await Favorite.findOne({
-                where: { userId },
-                include: [{
-                    model: Product,
-                    through: { attributes: [] }
-                }]
-            });
-
-            if (!favorite) {
-                console.log('Creating new favorites for user:', userId); // Логируем создание нового списка избранного
-                favorite = await Favorite.create({ userId });
-            }
-
-            res.json({
-                Products: favorite.Products || [],
-                totalCount: favorite.Products ? favorite.Products.length : 0
-            });
-        } catch (jwtError) {
-            console.error('JWT verification error:', jwtError); // Логируем ошибку проверки токена
-            return res.status(401).json({ message: 'Неверный токен' });
-        }
+        res.json({
+            Products: favorite.Products || [],
+            totalCount: favorite.Products ? favorite.Products.length : 0
+        });
     } catch (error) {
-        console.error('Favorites route error:', error); // Логируем общую ошибку
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка получения избранного' 
+                : error.message 
+        });
     }
 });
 
 // Добавить товар в избранное
-router.post('/add', async (req, res) => {
+router.post('/add', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
         const { productId } = req.body;
 
         if (!userId || !productId) {
@@ -84,20 +64,18 @@ router.post('/add', async (req, res) => {
             totalCount: updatedFavorite.Products.length
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка добавления в избранное' 
+                : error.message 
+        });
     }
 });
 
 // Удалить товар из избранного
-router.delete('/remove/:productId', async (req, res) => {
+router.delete('/remove/:productId', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
         const productId = req.params.productId;
 
         if (!userId) {
@@ -121,20 +99,18 @@ router.delete('/remove/:productId', async (req, res) => {
 
         res.json({ message: 'Product removed from favorites' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка удаления из избранного' 
+                : error.message 
+        });
     }
 });
 
 // Очистить избранное
-router.delete('/clear', async (req, res) => {
+router.delete('/clear', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
 
         if (!userId) {
             return res.status(400).json({ message: 'User ID is required' });
@@ -154,7 +130,11 @@ router.delete('/clear', async (req, res) => {
 
         res.json({ message: 'Favorites cleared successfully' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка очистки избранного' 
+                : error.message 
+        });
     }
 });
 

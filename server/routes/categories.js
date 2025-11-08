@@ -1,9 +1,12 @@
 const router = require('express').Router();
 const { Product } = require('../models');
 const { Op } = require('sequelize');
+const adminAuthMiddleware = require('../middleware/adminAuth');
+const { adminLimiter } = require('../middleware/security');
+const { validateSearch } = require('../middleware/validation');
 
 // Получить все категории
-router.get('/', async (req, res) => {
+router.get('/', validateSearch, async (req, res) => {
     try {
         const categories = await Product.findAll({
             attributes: [
@@ -43,9 +46,8 @@ router.get('/:category/products', async (req, res) => {
     }
 });
 
-// Создать новую категорию (создает временный продукт-заглушку)
-const authMiddleware = require('../middleware/auth');
-router.post('/', authMiddleware, async (req, res) => {
+// Создать новую категорию (только для админа)
+router.post('/', adminLimiter, adminAuthMiddleware, async (req, res) => {
     try {
         const { category } = req.body;
         
@@ -69,7 +71,7 @@ router.post('/', authMiddleware, async (req, res) => {
         // Создаем временный продукт-заглушку для создания категории
         // Этот продукт можно будет удалить или отредактировать позже
         const tempProduct = await Product.create({
-            title: `[Временный] ${category.trim()}`,
+            title: category,
             price: 0,
             imageUrl: '',
             category: category.trim(),
@@ -89,8 +91,8 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
-// Удалить категорию (удаляет все продукты с этой категорией)
-router.delete('/:category', authMiddleware, async (req, res) => {
+// Удалить категорию (только для админа)
+router.delete('/:category', adminLimiter, adminAuthMiddleware, async (req, res) => {
     try {
         const { category } = req.params;
         

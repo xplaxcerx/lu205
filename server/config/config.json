@@ -1,9 +1,6 @@
 {
   "development": {
-    "username": "postgres",
-    "password": "Gcc2020",
-    "database": "universam205inc",
-    "host": "localhost",
+    "use_env_variable": "DATABASE_URL",
     "dialect": "postgres"
   },
   "production": {

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const { sequelize, Order, OrderItem, Cart, CartItem, Product, User } = require('../models');
 const { Op } = require('sequelize');
 const authMiddleware = require('../middleware/auth');
+const adminAuthMiddleware = require('../middleware/adminAuth');
 const { sendOrderNotification } = require('../utils/telegramNotifier');
 
 // Создание заказа из корзины
@@ -92,14 +93,17 @@ router.post('/', authMiddleware, async (req, res) => {
             return orderWithItems;
         });
 
-        sendOrderNotification(result, user).catch(err => {
-            console.error('Failed to send Telegram notification:', err);
+        sendOrderNotification(result, user).catch(() => {
+            // Ошибка отправки уведомления не критична
         });
 
         res.status(201).json(result);
     } catch (error) {
-        console.error('Error creating order:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка создания заказа' 
+                : error.message 
+        });
     }
 });
 
@@ -117,8 +121,11 @@ router.get('/', authMiddleware, async (req, res) => {
 
         res.json(orders);
     } catch (error) {
-        console.error('Error fetching orders:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка получения заказов' 
+                : error.message 
+        });
     }
 });
 
@@ -142,8 +149,11 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
         res.json(order);
     } catch (error) {
-        console.error('Error fetching order:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка получения заказа' 
+                : error.message 
+        });
     }
 });
 
@@ -187,17 +197,17 @@ router.patch('/:orderId/delivery-room', authMiddleware, async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error updating delivery room:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка обновления комнаты доставки' 
+                : error.message 
+        });
     }
 });
 
-// Получение всех заказов (для админов)
-router.get('/admin/all', authMiddleware, async (req, res) => {
+// Получение всех заказов (только для админов)
+router.get('/admin/all', adminAuthMiddleware, async (req, res) => {
     try {
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Нет прав доступа' });
-        }
 
         const orders = await Order.findAll({
             include: [{
@@ -212,8 +222,11 @@ router.get('/admin/all', authMiddleware, async (req, res) => {
 
         res.json(orders);
     } catch (error) {
-        console.error('Error fetching all orders:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка получения всех заказов' 
+                : error.message 
+        });
     }
 });
 

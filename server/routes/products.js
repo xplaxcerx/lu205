@@ -1,9 +1,16 @@
 const router = require('express').Router();
 const { Product } = require('../models');
 const { Op } = require('sequelize');
+const adminAuthMiddleware = require('../middleware/adminAuth');
+const { adminLimiter } = require('../middleware/security');
+const {
+    validateProduct,
+    validateId,
+    validateSearch,
+} = require('../middleware/validation');
 
 // Получить все товары
-router.get('/', async (req, res) => {
+router.get('/', validateSearch, async (req, res) => {
     try {
         const { category, search } = req.query;
         let whereClause = {};
@@ -32,7 +39,7 @@ router.get('/', async (req, res) => {
 });
 
 // Получить товар по ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateId, async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
         if (!product) {
@@ -44,8 +51,8 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Добавить новый товар
-router.post('/', async (req, res) => {
+// Добавить новый товар (только для админа)
+router.post('/', adminLimiter, adminAuthMiddleware, validateProduct, async (req, res) => {
     try {
         const { title, price, imageUrl, category, size, unit, rating, reviews, article, brand, inStock } = req.body;
         const product = await Product.create({
@@ -67,8 +74,8 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Обновить товар
-router.put('/:id', async (req, res) => {
+// Обновить товар (только для админа)
+router.put('/:id', adminLimiter, adminAuthMiddleware, validateId, validateProduct, async (req, res) => {
     try {
         const { title, price, imageUrl, category, size, unit, type, inStock } = req.body;
         
@@ -91,13 +98,17 @@ router.put('/:id', async (req, res) => {
 
         res.json(product);
     } catch (error) {
-        console.error('Error:', error);
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка обновления товара' 
+                : error.message 
+        });
     }
 });
 
-// Удалить товар
-router.delete('/:id', async (req, res) => {
+
+// Удалить товар (только для админа)
+router.delete('/:id', adminLimiter, adminAuthMiddleware, validateId, async (req, res) => {
     try {
         const product = await Product.findByPk(req.params.id);
         
@@ -105,15 +116,19 @@ router.delete('/:id', async (req, res) => {
             return res.status(404).json({ message: 'Товар не найден' });
         }
 
-        await product.destroy();
+        await product.destroy({where: {id: req.params.id}});
         res.json({ message: 'Товар удален' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка удаления товара' 
+                : error.message 
+        });
     }
 });
 
-// Создать тестовые продукты
-router.post('/seed', async (req, res) => {
+// Создать тестовые продукты (только для админа)
+router.post('/seed', adminLimiter, adminAuthMiddleware, async (req, res) => {
     try {
         const testProducts = [
             {

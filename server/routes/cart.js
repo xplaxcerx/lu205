@@ -1,68 +1,48 @@
 const router = require('express').Router();
 const { Cart, Product, CartItem } = require('../models');
-const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/auth');
 
 // Получить корзину
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
-        console.log('Headers:', req.headers); // Логируем заголовки
+        const userId = req.user.id;
 
-        const token = req.headers.authorization?.split(' ')[1];
-        console.log('Token:', token); // Логируем токен
+        let cart = await Cart.findOne({
+            where: { userId },
+            include: [{
+                model: Product,
+                through: {
+                    model: CartItem,
+                    attributes: ['quantity']
+                }
+            }]
+        });
 
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
+        if (!cart) {
+            cart = await Cart.create({ userId });
         }
 
-        try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-            console.log('Decoded token:', decoded); // Логируем декодированный токен
-            const userId = decoded.id;
+        const totalPrice = cart.Products?.reduce((sum, item) => sum + (item.CartItem.quantity * item.price), 0) || 0;
+        const totalCount = cart.Products?.reduce((sum, item) => sum + item.CartItem.quantity, 0) || 0;
 
-            let cart = await Cart.findOne({
-                where: { userId },
-                include: [{
-                    model: Product,
-                    through: {
-                        model: CartItem,
-                        attributes: ['quantity']
-                    }
-                }]
-            });
-
-            if (!cart) {
-                console.log('Creating new cart for user:', userId); // Логируем создание новой корзины
-                cart = await Cart.create({ userId });
-            }
-
-            const totalPrice = cart.Products?.reduce((sum, item) => sum + (item.CartItem.quantity * item.price), 0) || 0;
-            const totalCount = cart.Products?.reduce((sum, item) => sum + item.CartItem.quantity, 0) || 0;
-
-            res.json({
-                Products: cart.Products || [],
-                totalPrice,
-                totalCount
-            });
-        } catch (jwtError) {
-            console.error('JWT verification error:', jwtError); // Логируем ошибку проверки токена
-            return res.status(401).json({ message: 'Неверный токен' });
-        }
+        res.json({
+            Products: cart.Products || [],
+            totalPrice,
+            totalCount
+        });
     } catch (error) {
-        console.error('Cart route error:', error); // Логируем общую ошибку
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка получения корзины' 
+                : error.message 
+        });
     }
 });
 
 // Добавить товар в корзину
-router.post('/add', async (req, res) => {
+router.post('/add', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
 
         const { productId, quantity = 1 } = req.body;
 
@@ -111,21 +91,18 @@ router.post('/add', async (req, res) => {
             totalCount
         });
     } catch (error) {
-        console.error('Add to cart error:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка добавления товара в корзину' 
+                : error.message 
+        });
     }
 });
 
 // Удалить товар из корзины
-router.delete('/remove/:id', async (req, res) => {
+router.delete('/remove/:id', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
 
         const productId = req.params.id;
 
@@ -161,21 +138,18 @@ router.delete('/remove/:id', async (req, res) => {
             totalCount
         });
     } catch (error) {
-        console.error('Remove from cart error:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка удаления товара из корзины' 
+                : error.message 
+        });
     }
 });
 
 // Обновить количество товара
-router.put('/update/:id', async (req, res) => {
+router.put('/update/:id', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
 
         const productId = req.params.id;
         const { quantity } = req.body;
@@ -215,21 +189,18 @@ router.put('/update/:id', async (req, res) => {
             totalCount
         });
     } catch (error) {
-        console.error('Update cart error:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка обновления корзины' 
+                : error.message 
+        });
     }
 });
 
 // Очистить корзину
-router.delete('/clear', async (req, res) => {
+router.delete('/clear', authMiddleware, async (req, res) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ message: 'Не авторизован' });
-        }
-
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-        const userId = decoded.id;
+        const userId = req.user.id;
 
         const cart = await Cart.findOne({ where: { userId } });
         
@@ -243,8 +214,11 @@ router.delete('/clear', async (req, res) => {
 
         res.json({ message: 'Корзина очищена' });
     } catch (error) {
-        console.error('Clear cart error:', error);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            message: process.env.NODE_ENV === 'production' 
+                ? 'Ошибка очистки корзины' 
+                : error.message 
+        });
     }
 });
 
