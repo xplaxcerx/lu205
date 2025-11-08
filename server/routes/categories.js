@@ -69,9 +69,9 @@ router.post('/', adminLimiter, adminAuthMiddleware, async (req, res) => {
         }
 
         // Создаем временный продукт-заглушку для создания категории
-        // Этот продукт можно будет удалить или отредактировать позже
+        // Этот продукт будет автоматически скрыт из списка товаров (фильтруется в админ-панели)
         const tempProduct = await Product.create({
-            title: category,
+            title: `[Временный] ${category}`,
             price: 0,
             imageUrl: '',
             category: category.trim(),

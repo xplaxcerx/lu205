@@ -156,6 +156,15 @@ router.get('/products', adminLimiter, adminMiddleware, validateSearch, async (re
             );
         }
 
+        // Исключаем временные товары-заглушки (созданные при создании категорий)
+        // Временные товары имеют название, начинающееся с "[Временный]"
+        whereConditions[Op.and].push(
+            sequelize.where(
+                sequelize.fn('LOWER', sequelize.col('title')),
+                { [Op.notLike]: '[временный]%' }
+            )
+        );
+
         const products = await Product.findAll({
             where: whereConditions[Op.and].length ? whereConditions : {},
             order: [['title', 'ASC']] // Сортировка по названию

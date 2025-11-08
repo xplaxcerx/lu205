@@ -116,7 +116,7 @@ router.delete('/:id', adminLimiter, adminAuthMiddleware, validateId, async (req,
             return res.status(404).json({ message: 'Товар не найден' });
         }
 
-        await product.destroy({where: {id: req.params.id}});
+        await product.destroy();
         res.json({ message: 'Товар удален' });
     } catch (error) {
         res.status(500).json({ 
