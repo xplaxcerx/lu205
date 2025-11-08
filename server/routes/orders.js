@@ -34,12 +34,18 @@ router.post('/', authMiddleware, async (req, res) => {
 
         // Получаем пользователя для комнаты доставки (если есть)
         const user = await User.findByPk(userId);
-        const { deliveryRoom } = req.body;
+        const { deliveryRoom, needsDelivery } = req.body;
 
         // Вычисляем общую стоимость
         const totalPrice = cart.Products.reduce((sum, item) => {
             return sum + (item.price * item.CartItem.quantity);
         }, 0);
+
+        // Определяем комнату доставки: только если явно указана доставка и комната
+        // Если needsDelivery = false или не указан, то deliveryRoom = null
+        const finalDeliveryRoom = (needsDelivery && deliveryRoom && deliveryRoom.trim() !== '') 
+            ? deliveryRoom.trim() 
+            : null;
 
         // Создаем заказ в транзакции
         const result = await sequelize.transaction(async (t) => {
@@ -47,7 +53,7 @@ router.post('/', authMiddleware, async (req, res) => {
             const order = await Order.create({
                 userId,
                 totalPrice,
-                deliveryRoom: deliveryRoom || user?.room || null
+                deliveryRoom: finalDeliveryRoom
             }, { transaction: t });
 
             // Создаем позиции заказа

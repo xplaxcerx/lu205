@@ -49,7 +49,7 @@ export const orderApiSlice = createApi({
     }),
     tagTypes: ['Order', 'Cart'],
     endpoints: (builder) => ({
-        createOrder: builder.mutation<OrderResponse, { deliveryRoom?: string | null } | void>({
+        createOrder: builder.mutation<OrderResponse, { deliveryRoom?: string | null; needsDelivery?: boolean } | void>({
             query: (params) => ({
                 url: '/orders',
                 method: 'POST',

@@ -104,7 +104,10 @@ export const Cart = () => {
 
     const onClickOrder = async () => {
         const room = isDelivery ? (savedRoom || user?.room || null) : null;
-        const response = await createOrder({ deliveryRoom: room }).unwrap();
+        const response = await createOrder({ 
+            deliveryRoom: room,
+            needsDelivery: isDelivery 
+        }).unwrap();
         setOrderResponse(response);
         setIsOrderModalOpened(true);
     }
