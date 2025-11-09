@@ -17,13 +17,16 @@ const helmetConfig = helmet({
 });
 
 // Rate limiting для API
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 минут
-    max: 100, // максимум 100 запросов с одного IP
-    message: 'Слишком много запросов с этого IP, попробуйте позже',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// В development режиме более мягкие лимиты или отключен через DISABLE_RATE_LIMIT
+const apiLimiter = process.env.DISABLE_RATE_LIMIT === 'true' 
+    ? (req, res, next) => next() // Отключаем rate limiting
+    : rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 минут
+        max: process.env.NODE_ENV === 'production' ? 100 : 1000, // в development больше лимит
+        message: 'Слишком много запросов с этого IP, попробуйте позже',
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
 
 // Строгий rate limiting для авторизации
 const authLimiter = rateLimit({
@@ -34,11 +37,13 @@ const authLimiter = rateLimit({
 });
 
 // Rate limiting для админ-панели
-const adminLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 50,
-    message: 'Слишком много запросов к админ-панели',
-});
+const adminLimiter = process.env.DISABLE_RATE_LIMIT === 'true'
+    ? (req, res, next) => next() // Отключаем rate limiting
+    : rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: process.env.NODE_ENV === 'production' ? 50 : 500, // в development больше лимит
+        message: 'Слишком много запросов к админ-панели',
+    });
 
 // Защита от NoSQL injection
 const sanitizeInput = mongoSanitize({

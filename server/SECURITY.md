@@ -64,6 +64,10 @@ JWT_SECRET=your_super_secret_jwt_key_minimum_32_characters_long
 # CORS Configuration
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 
+# Rate Limiting (опционально, для development)
+# Установите DISABLE_RATE_LIMIT=true чтобы отключить rate limiting в development
+DISABLE_RATE_LIMIT=false
+
 # Telegram Bot Configuration (опционально)
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
 TELEGRAM_CHAT_ID=your_telegram_chat_id
